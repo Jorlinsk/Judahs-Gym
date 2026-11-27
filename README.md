@@ -1,4 +1,4 @@
-# Judah’s Gym
+# chaver b’imun
 
 A lightweight, mobile-first workout tracker for **A / B / C** gym days.
 
