@@ -104,6 +104,19 @@ textarea.field { min-height: 80px; resize: vertical; }
 #toast { position: fixed; right: 16px; bottom: 104px; max-width: 300px; background: #1a3647; color: #fff; padding: 12px 16px; border-radius: 11px; box-shadow: 0 10px 25px #0d293930; font-size: 13px; z-index: 99; display: none; }
 dialog { border: none; border-radius: 18px; width: min(460px,calc(100vw - 28px)); max-height: 90dvh; overflow: auto; padding: 23px; box-shadow: 0 30px 90px #061f3440; color: #1c3048; }
 dialog::backdrop { background: #101f30a6; }
+.section-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px; flex-shrink:0; }
+.section-actions .btn { min-height:40px; white-space:nowrap; }
+.order-list { list-style:none; padding:0; margin:14px 0 0; border-top:1px solid #e5e9f0; }
+.order-row { display:flex; align-items:center; gap:10px; min-height:58px; padding:8px 0; border-bottom:1px solid #e5e9f0; }
+.order-position { width:24px; flex-shrink:0; color:#6c7a8c; font-size:13px; font-weight:700; text-align:center; }
+.order-name { flex:1; font-size:14px; font-weight:700; overflow-wrap:anywhere; }
+.order-moves { display:flex; gap:6px; flex-shrink:0; }
+.order-move { width:44px; height:44px; padding:0; font-size:20px; }
+.order-move:disabled, #resetExerciseOrder:disabled { opacity:.35; cursor:default; }
+#orderDialog .actions { flex-wrap:wrap; }
+#orderDialog .actions .btn { min-height:44px; }
+@media(max-width:380px) { .section-actions { flex-direction:column; } #orderDialog { padding:17px; } }
+
 dialog h3 { margin: 0 0 6px; font-size: 20px; }
 dialog p { margin: 0 0 14px; font-size: 13px; color: #6b7d91; }
 dialog .actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 20px; }
@@ -261,6 +274,7 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 9px; margin-top
 <div class="settings-section"><label class="fieldlabel" for="guideAudioMode">AirPods audio coach</label><select class="field" id="guideAudioMode"><option value="voice">Voice + chime</option><option value="chime">Chime only</option><option value="off">Silent</option></select></div>
 <div class="settings-section"><button type="button" class="audio-test" id="testGymAudio">▶ Test sound</button><p class="audio-hint">AirPods use your iPhone’s current audio output. Keep the screen on for reliable timed cues; iOS may suspend web audio while locked.</p></div>
 <div class="actions"><button type="button" class="btn accent" id="closeGymSettings">Done</button></div></dialog>
+<dialog id="orderDialog" aria-labelledby="orderTitle"><h3 id="orderTitle">Exercise order</h3><p><strong id="orderDayName"></strong> · Use the arrows to move exercises. This order will also be used in guided workouts. Your other days and saved sets stay unchanged.</p><ol id="orderList" class="order-list"></ol><div class="actions"><button type="button" class="btn ghost" id="resetExerciseOrder">Reset order</button><button type="button" class="btn" id="cancelExerciseOrder">Cancel</button><button type="button" class="btn accent" id="saveExerciseOrder">Save order</button></div></dialog>
 <dialog id="personDialog"><form id="personForm"><h3>Add a personal profile</h3><p>Start with the same A / B / C routine, blank weights and an empty workout history. This profile stays on this browser.</p><label for="personName" class="fieldlabel">Name</label><input id="personName" class="field" required maxlength="35" placeholder="e.g. David"><div class="actions"><button type="button" class="btn" id="personCancel">Cancel</button><button type="submit" class="btn accent">Create profile</button></div></form></dialog>
 <dialog id="shareDialog"><h3>Share <bdi lang="he" dir="rtl">חבר באימון</bdi></h3><p>Share the website link with your friend. They get the same exercises with blank starting weights and create their own log. Your saved weights and history are not sent.</p><label class="fieldlabel" for="shareUrl">Website address</label><input class="field" id="shareUrl" readonly><div id="shareStatus" class="share-banner"><strong>Share the hosted version</strong>If this file is not on a website yet, publish the GitHub Pages site first.</div><div class="actions"><button type="button" class="btn" id="shareClose">Close</button><button type="button" class="btn accent" id="copyShare">Copy link</button></div></dialog>
 <div class="savebar" id="savebar"><div class="savebar-inner"><div><b id="saveTitle">Ready for your workout</b><small id="saveDetails">Your inputs save as a draft automatically</small></div><button id="saveSession" type="button">Finish & save</button></div></div>
@@ -589,7 +603,7 @@ function muscleSvg(id){const spec=ART[id]||{where:'Muscle group',view:'front',pa
 }
 function visualPanel(ex){const spec=ART[ex.id]||{where:ex.muscle,parts:[],view:'front',cue:'Follow the setup for your own machine.'};return `<div class="exercise-visual"><div class="motion-panel">${motionSvg(ex.id)}<div class="motion-copy"><div class="visual-eyebrow">Mid-rep position</div><div class="motion-cue">${esc(spec.cue)}</div>${spec.uncertain?'<span class="visual-flag">Confirm machine / grip</span>':''}</div></div><div class="target-panel">${muscleSvg(ex.id)}<div class="target-name">${esc(spec.where)}</div></div></div>`;}
 
-const DEFAULT = {schema:1,custom:[],overrides:{},history:[],drafts:{},nextUp:{},nextLoads:{},prefs:{upperFrontRaise:false,restSeconds:90,exerciseRestSeconds:120,audioMode:"voice"},guided:{active:false,day:'upper',id:null,index:0,restUntil:0,lastAction:null}};
+const DEFAULT = {schema:1,custom:[],overrides:{},history:[],drafts:{},nextUp:{},nextLoads:{},exerciseOrder:{},prefs:{upperFrontRaise:false,restSeconds:90,exerciseRestSeconds:120,audioMode:"voice"},guided:{active:false,day:'upper',id:null,index:0,restUntil:0,lastAction:null}};
 let state, day='upper', page='workout', storageOK=true, toastTimer;
 
 const PROFILE_KEY='judahs-gym-profiles-v3';
@@ -617,7 +631,28 @@ function persist(){try{vault.people[profileId].data=state;vault.active=profileId
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmt(n){ if(n===null||n===undefined||n==='')return '—';return Number(n).toLocaleString(undefined,{maximumFractionDigits:2}); }
 function getEx(id){const base=BASE.find(x=>x.id===id)||state.custom.find(x=>x.id===id);return base?{...base,...(state.overrides[id]||{})}:null;}
-function currentIds(d){let ids=DAYS[d].order.filter(id=>!(d==='upper'&&(id==='front'?!state.prefs.upperFrontRaise:state.prefs.upperFrontRaise&&id==='shoulder')));return ids.concat(state.custom.filter(e=>e.days.includes(d)).map(x=>x.id));}
+function routineOrder(d){
+ const base=DAYS[d].order.filter(id=>!(d==='upper'&&id==='front'));
+ return [...new Set(base.concat(state.custom.filter(e=>e.days.includes(d)).map(e=>e.id)))];
+}
+function reconcileExerciseOrder(d, saved){
+ const base=routineOrder(d),allowed=new Set(base),seen=new Set(),result=[];
+ for(const id of Array.isArray(saved)?saved:[]){if(allowed.has(id)&&!seen.has(id)){seen.add(id);result.push(id);}}
+ return result.concat(base.filter(id=>!seen.has(id)));
+}
+function orderedSlots(d){return reconcileExerciseOrder(d,state.exerciseOrder?.[d]);}
+function exerciseIdForSlot(d,id){return d==='upper'&&id==='shoulder'&&state.prefs.upperFrontRaise?'front':id;}
+function currentIds(d){return orderedSlots(d).map(id=>exerciseIdForSlot(d,id));}
+function applyExerciseOrder(d, proposed){
+ const next=reconcileExerciseOrder(d,proposed),before=orderedSlots(d);
+ if(next.every((id,i)=>id===before[i]))return false;
+ if(!state.exerciseOrder||typeof state.exerciseOrder!=='object'||Array.isArray(state.exerciseOrder))state.exerciseOrder={};
+ const original=routineOrder(d);
+ if(next.every((id,i)=>id===original[i]))delete state.exerciseOrder[d];else state.exerciseOrder[d]=next;
+ const g=state.guided;
+ if(g&&!g.active&&g.day===d){g.id=null;g.index=0;g.lastAction=null;g.review=false;g.restUntil=0;g.restLength=0;}
+ return true;
+}
 function lastEntry(id){for(let i=state.history.length-1;i>=0;i--){let e=state.history[i].entries.find(x=>x.id===id&&x.sets.some(y=>y.done));if(e)return {entry:e,session:state.history[i]};}return null;}
 function getSuggestion(ex){const prev=lastEntry(ex.id);if(!prev)return null;const done=prev.entry.sets.filter(s=>s.done&&Number.isFinite(Number(s.reps))&&Number(s.reps)>0);if(!done.length)return null;const lastWeight=done[done.length-1].weight;
  const allMax=done.length>=ex.sets && done.every(s=>Number(s.reps)>=ex.max);
@@ -672,7 +707,42 @@ function renderCard(ex){const sets=state.drafts[day][ex.id],last=lastEntry(ex.id
  const lastText=last?`Last logged ${datestr(last.session.date)}: ${last.entry.sets.filter(s=>s.done).map(s=>body?`${s.reps} reps`:`${fmt(s.weight)}×${s.reps}`).join(', ')}`:'No logged sessions yet';
  return `<article class="excard" id="card-${ex.id}"><div class="extop"><div><h4>${esc(ex.name)}${ex.id==='legPress'?'<span class="visual-flag" style="margin-left:8px">Optional</span>':''}</h4><div class="meta"><span><strong>${ex.sets} sets</strong> · ${ex.min}–${ex.max} reps</span>${body?'':`<span>${esc(ex.unit)}${['lateral','front','curls','hammer','splitSquat'].includes(ex.id)?' per hand':''}</span>`}</div></div><button class="btn ghost tiny" data-edit="${ex.id}" title="Edit targets for this exercise">Edit</button></div>${visualPanel(ex)}${ex.note?`<div class="note">${esc(ex.note)}</div>`:''}<div class="ex-tools"><div class="adjust">${body?'<span class="adjust-label">Bodyweight</span>':`<span class="adjust-label">All weights</span><button class="mini" type="button" aria-label="Decrease ${esc(ex.name)} weight" data-adjust="${ex.id}" data-direction="-1">−</button><button class="mini" type="button" aria-label="Increase ${esc(ex.name)} weight" data-adjust="${ex.id}" data-direction="1">+</button>`}</div><div class="adjust"><span class="adjust-label">All reps</span><button class="mini" type="button" aria-label="Decrease ${esc(ex.name)} reps" data-reps-adjust="${ex.id}" data-direction="-1">−</button><button class="mini" type="button" aria-label="Increase ${esc(ex.name)} reps" data-reps-adjust="${ex.id}" data-direction="1">+</button></div>${sug?`<span class="hint">${esc(sug.text)}${sug.type==='weight'?` <button type="button" data-apply="${ex.id}">Apply</button>`:''}</span>`:''}</div>${nextUpMarkup(ex,sets)}<div class="set-head"><span>SET</span><span>${body?'WEIGHT':esc(label.toUpperCase())}</span><span>REPS</span><span style="text-align:center">DONE</span></div>${rows}<div class="cardfoot"><span class="last">${esc(lastText)}</span><button type="button" class="btn tiny" data-all="${ex.id}">Mark all ✓</button></div></article>`;
 }
-function renderWorkout(){ensureDraft(day);renderDaynav();let info=DAYS[day],ids=currentIds(day),out=`<div class="guided-start"><div><b>Ready to train?</b><small>One set at a time, with rest countdowns and optional AirPods audio cues. Your draft is saved along the way.</small></div><button type="button" id="startGuided">▶ ${state.guided?.active&&state.guided.day===day?"Resume":"Start"} workout</button></div><div class="sectionHead"><div><h2>${esc(info.label)}</h2><p>${esc(info.description)} · ${ids.length} exercises</p></div><button type="button" class="btn" id="addExercise">+ Add</button></div>`;
+let orderDay=null,orderDraft=[];
+function openExerciseOrder(){
+ if(state.guided?.active)return;
+ orderDay=day;orderDraft=orderedSlots(orderDay);
+ document.getElementById('orderDayName').textContent=DAYS[orderDay].label;
+ renderOrderList();
+ document.getElementById('orderDialog').showModal();
+}
+function renderOrderList(focusIndex=null,focusDirection=null){
+ const list=document.getElementById('orderList');
+ list.innerHTML=orderDraft.map((slot,i)=>{
+  const name=getEx(exerciseIdForSlot(orderDay,slot))?.name||slot;
+  return `<li class="order-row"><span class="order-position" aria-hidden="true">${i+1}</span><span class="order-name">${esc(name)}</span><div class="order-moves"><button class="btn order-move" type="button" data-order-index="${i}" data-order-direction="-1" aria-label="Move ${esc(name)} up" ${i===0?'disabled':''}>↑</button><button class="btn order-move" type="button" data-order-index="${i}" data-order-direction="1" aria-label="Move ${esc(name)} down" ${i===orderDraft.length-1?'disabled':''}>↓</button></div></li>`;
+ }).join('');
+ document.getElementById('resetExerciseOrder').disabled=orderDraft.every((id,i)=>id===routineOrder(orderDay)[i]);
+ if(focusIndex!==null){
+  const target=list.querySelector(`[data-order-index="${focusIndex}"][data-order-direction="${focusDirection}"]:not(:disabled)`)||list.querySelector(`[data-order-index="${focusIndex}"]:not(:disabled)`);
+  target?.focus({preventScroll:true});target?.closest('li')?.scrollIntoView({block:'nearest'});
+ }
+}
+function moveExerciseOrder(index,direction){
+ if(!Number.isInteger(index)||![-1,1].includes(direction))return;
+ const next=index+direction;
+ if(index<0||index>=orderDraft.length||next<0||next>=orderDraft.length)return;
+ [orderDraft[index],orderDraft[next]]=[orderDraft[next],orderDraft[index]];
+ renderOrderList(next,direction);
+}
+function saveExerciseOrder(){
+ const dialog=document.getElementById('orderDialog');
+ if(orderDay!==day||state.guided?.active){dialog.close();return;}
+ const changed=applyExerciseOrder(orderDay,orderDraft);
+ dialog.close();
+ if(changed){persist();renderWorkout();toast(storageOK?'Exercise order saved.':'Order updated, but browser storage is unavailable.');}
+ document.getElementById('openExerciseOrder')?.focus({preventScroll:true});
+}
+function renderWorkout(){ensureDraft(day);renderDaynav();let info=DAYS[day],ids=currentIds(day),out=`<div class="guided-start"><div><b>Ready to train?</b><small>One set at a time, with rest countdowns and optional AirPods audio cues. Your draft is saved along the way.</small></div><button type="button" id="startGuided">▶ ${state.guided?.active&&state.guided.day===day?"Resume":"Start"} workout</button></div><div class="sectionHead"><div><h2>${esc(info.label)}</h2><p>${esc(info.description)} · ${ids.length} exercises</p></div><div class="section-actions"><button type="button" class="btn" id="openExerciseOrder">↕ Order</button><button type="button" class="btn" id="addExercise">+ Add</button></div></div>`;
  if(!storageOK)out+='<div class="banner">Browser storage is unavailable. Export your session before closing this tab.</div>';
  out+=`<div class="utility">${day==='upper'?`<button class="btn softer" data-swap="true" type="button">⇄ ${state.prefs.upperFrontRaise?'Use shoulder press':'Use front raises instead of shoulder press'}</button>`:''}<button class="btn" type="button" id="markAll">✓ Mark all sets</button><button class="btn ghost" type="button" id="resetDraft">Reset draft</button></div>`;
  out+=`<div class="summary"><span aria-hidden="true">↗</span><div><strong>Simple progression:</strong> reach the top of your rep range across all sets with good form, then increase the weight by your chosen increment. Adjust any number directly; suggestions are optional.</div></div>`;
@@ -863,6 +933,11 @@ function render(){renderWorkout();setPage(page);}
 function resetDraft(){if(!confirm(`Reset the ${DAYS[day].label} draft? Saved workout history will not be affected.`))return;delete state.drafts[day];persist();renderWorkout();toast('Draft reset from your latest saved weights.');}
 function guideFieldsSaveIfActive(){if(state.guided?.active&&page==='workout')guideFieldsSave();}
 function handleClick(ev){const b=ev.target.closest('button');if(!b)return;
+ if(b.id==='openExerciseOrder'){openExerciseOrder();return;}
+ if(b.dataset.orderIndex!==undefined){moveExerciseOrder(Number(b.dataset.orderIndex),Number(b.dataset.orderDirection));return;}
+ if(b.id==='resetExerciseOrder'){orderDraft=routineOrder(orderDay);renderOrderList();return;}
+ if(b.id==='cancelExerciseOrder'){document.getElementById('orderDialog').close();return;}
+ if(b.id==='saveExerciseOrder'){saveExerciseOrder();return;}
  if(b.dataset.nextUp){guideFieldsSaveIfActive();toggleNextUp(b.dataset.nextUp);return;}
  if(b.id==='migrationImport'){document.getElementById('importFile').click();return;}
  if(b.id==='migrationDismiss'){document.getElementById('migrationTip').classList.add('hide');try{localStorage.setItem('judahs-gym-migration-dismissed','1');}catch(e){}return;}
