@@ -333,6 +333,26 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 9px; margin-top
 .floating-rest{bottom:calc(74px + env(safe-area-inset-bottom));}
 @media(max-width:360px){.guided-actionbar-inner{gap:5px}.guided-actionbar .guided-finish-action{font-size:12px;padding:0 8px}.guided-actionbar button{font-size:13px}.guided-actionbar .undo{font-size:21px}.guided-adjust button{min-width:37px}}
 
+
+/* Two-position exercise diagrams: shared scale, clear equipment and readable cues. */
+.exercise-visual{grid-template-columns:minmax(0,1fr);gap:6px;margin:10px 0;}
+.motion-panel{display:block;padding:8px;background:#f3f7f9;}
+.motion-frames{min-width:0;}
+.motion-art{display:block;width:100%;height:auto;max-width:none;aspect-ratio:366/132;}
+.motion-labels{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:5px 0 8px;}
+.motion-labels span{text-align:center;font-size:11px;font-weight:750;color:#415d70;}
+.motion-copy{padding:0 3px 2px;}
+.motion-cue{font-size:12px;line-height:1.4;font-weight:650;color:#2c4c5e;}
+.target-panel{display:flex;flex-direction:row;justify-content:flex-start;align-items:center;gap:10px;padding:5px 10px;}
+.target-art{width:auto;height:51px;max-width:75px;flex:none;}
+.target-name{text-align:left;font-size:12px;color:#176e64;font-weight:750;}
+.visual-uncertain{margin-top:5px;color:#765e38;font-size:11px;}
+.visual-uncertain summary{cursor:pointer;font-weight:700;line-height:1.4;}
+.visual-uncertain div{margin-top:3px;}
+.custom-visual{display:block;}
+.guided-card .exercise-visual{margin:9px 0 0;}
+@media(min-width:700px){.exercise-visual{grid-template-columns:minmax(0,1fr) 108px;}.target-panel{flex-direction:column;justify-content:center;text-align:center;padding:8px;}.target-art{height:75px;max-width:98px;}.target-name{text-align:center;}.motion-art{max-height:180px;}.motion-labels{max-width:500px;margin-left:auto;margin-right:auto;}}
+
 </style>
 </head>
 <body>
@@ -617,69 +637,375 @@ const BASE = [
 
 // Exercise visual guides are illustrative line art, not a substitute for machine setup instructions.
 const ART = {
- bench: {where:'Chest · triceps', view:'front',parts:['chest','triceps'],cue:'Bar above mid-chest; forearms nearly vertical at mid-rep.',pose:'bench'},
- incline:{where:'Upper chest · triceps',view:'front',parts:['chest','shoulders','triceps'],cue:'On an incline, drive the weights upward together.',pose:'incline',uncertain:true},
- fly:{where:'Chest',view:'front',parts:['chest'],cue:'Arms rounded, bringing the handles toward your midline.',pose:'fly'},
- row:{where:'Mid-back · biceps',view:'back',parts:['back','biceps'],cue:'Pull handles toward ribs; shoulders stay down.',pose:'row'},
- lat:{where:'Lats · biceps',view:'back',parts:['back','biceps'],cue:'Neutral-grip handle down toward upper chest.',pose:'lat'},
- lateral:{where:'Side shoulders',view:'front',parts:['shoulders'],cue:'Raise dumbbells out to shoulder height.',pose:'lateral'},
- shoulder:{where:'Shoulders · triceps',view:'front',parts:['shoulders','triceps'],cue:'Elbows below hands; press upward.',pose:'shoulder'},
- front:{where:'Front shoulders',view:'front',parts:['shoulders'],cue:'Weights close, raised in front to shoulder height.',pose:'front'},
- triExt:{where:'Triceps',view:'back',parts:['triceps'],cue:'Elbows close to sides; press handle down.',pose:'triExt'},
- french:{where:'Triceps',view:'back',parts:['triceps'],cue:'Lying down: straighten the elbows over you.',pose:'french'},
- curls:{where:'Biceps',view:'front',parts:['biceps'],cue:'Curl both dumbbells up, elbows near ribs.',pose:'curls'},
- hammer:{where:'Biceps · forearms',view:'front',parts:['biceps','forearms'],cue:'Palms face each other as you curl.',pose:'hammer'},
- splitSquat:{where:'Quads · glutes',view:'front',parts:['quads','glutes'],cue:'One foot forward, lower with both knees bent.',pose:'splitSquat',uncertain:true},
- legCurl:{where:'Hamstrings',view:'back',parts:['hamstrings'],cue:'On the leg-curl bench, bend knees against resistance.',pose:'legCurl',uncertain:true},
- legExt:{where:'Quads',view:'front',parts:['quads'],cue:'Seated, lift padded lever by straightening knees.',pose:'legExt'},
- legPress:{where:'Quads · glutes',view:'front',parts:['quads','glutes'],cue:'Press platform away without locking knees.',pose:'legPress'},
- backExt:{where:'Lower back · glutes',view:'back',parts:['lowerback','glutes'],cue:'At a hip hinge, raise torso to a straight line.',pose:'backExt'},
- situps:{where:'Abs',view:'front',parts:['abs'],cue:'Lift shoulders partway off the floor.',pose:'situps'},
- kneeRaise:{where:'Abs · hip flexors',view:'front',parts:['abs'],cue:'Bring bent knees up toward your waist.',pose:'kneeRaise'}
+  "bench": {
+    "where": "Chest · triceps",
+    "parts": [
+      "chest",
+      "triceps"
+    ],
+    "cue": "Lower bar to mid-chest; press up over shoulders. Feet planted.",
+    "labels": [
+      "Bar at chest",
+      "Press up"
+    ],
+    "name": "Barbell bench press"
+  },
+  "incline": {
+    "where": "Upper chest · triceps",
+    "parts": [
+      "upperchest",
+      "shoulders",
+      "triceps"
+    ],
+    "cue": "On an incline, press both hands upward; lower with control.",
+    "labels": [
+      "Hands at chest",
+      "Press up"
+    ],
+    "name": "Incline press",
+    "uncertain": "Incline dumbbell press shown; confirm your gym machine."
+  },
+  "fly": {
+    "where": "Chest",
+    "parts": [
+      "chest"
+    ],
+    "cue": "Keep a soft elbow bend; bring handles together without shrugging.",
+    "labels": [
+      "Arms open",
+      "Handles together"
+    ],
+    "name": "Seated chest fly machine"
+  },
+  "row": {
+    "where": "Mid-back · biceps",
+    "parts": [
+      "back",
+      "biceps"
+    ],
+    "cue": "Keep chest supported; pull handles toward ribs, elbows back.",
+    "labels": [
+      "Reach forward",
+      "Pull to ribs"
+    ],
+    "name": "Vertical row machine"
+  },
+  "lat": {
+    "where": "Lats · biceps",
+    "parts": [
+      "lats",
+      "biceps"
+    ],
+    "cue": "Neutral grip; pull toward upper chest, not behind the neck.",
+    "labels": [
+      "Arms overhead",
+      "Pull to chest"
+    ],
+    "name": "Neutral-grip lat pulldown"
+  },
+  "lateral": {
+    "where": "Side shoulders",
+    "parts": [
+      "shoulders"
+    ],
+    "cue": "Soft elbows; raise arms to shoulder height without shrugging.",
+    "labels": [
+      "Arms down",
+      "Raise sideways"
+    ],
+    "name": "Dumbbell lateral raise"
+  },
+  "shoulder": {
+    "where": "Shoulders · triceps",
+    "parts": [
+      "shoulders",
+      "triceps"
+    ],
+    "cue": "Press upward with wrists above elbows; keep your torso steady.",
+    "labels": [
+      "Handles at shoulders",
+      "Press overhead"
+    ],
+    "name": "Seated shoulder press",
+    "uncertain": "Generic seated machine; match your handles."
+  },
+  "front": {
+    "where": "Front shoulders",
+    "parts": [
+      "shoulders"
+    ],
+    "cue": "Raise weights in front to shoulder height; avoid leaning back.",
+    "labels": [
+      "Weights down",
+      "Raise forward"
+    ],
+    "name": "Dumbbell front raise"
+  },
+  "triExt": {
+    "where": "Triceps",
+    "parts": [
+      "triceps"
+    ],
+    "cue": "Pin elbows near ribs; straighten elbows to press down.",
+    "labels": [
+      "Elbows bent",
+      "Press down"
+    ],
+    "name": "Cable triceps pushdown"
+  },
+  "french": {
+    "where": "Triceps",
+    "parts": [
+      "triceps"
+    ],
+    "cue": "Upper arms stay steady; bend and straighten elbows above head.",
+    "labels": [
+      "Elbows bent",
+      "Extend elbows"
+    ],
+    "name": "Lying French press"
+  },
+  "curls": {
+    "where": "Biceps",
+    "parts": [
+      "biceps"
+    ],
+    "cue": "Palms up as you curl; keep elbows near your sides.",
+    "labels": [
+      "Arms down",
+      "Curl up"
+    ],
+    "name": "Dumbbell biceps curl"
+  },
+  "hammer": {
+    "where": "Biceps · forearms",
+    "parts": [
+      "biceps",
+      "forearms"
+    ],
+    "cue": "Keep palms facing each other and upper arms still.",
+    "labels": [
+      "Neutral grip",
+      "Curl up"
+    ],
+    "name": "Hammer curl"
+  },
+  "splitSquat": {
+    "where": "Quads · glutes",
+    "parts": [
+      "quads",
+      "glutes"
+    ],
+    "cue": "Bend through the working hip and knee; drive through the foot.",
+    "labels": [
+      "Tall stance",
+      "Lower body"
+    ],
+    "name": "Standing single-leg squat",
+    "uncertain": "Supported split-stance illustration; exact single-leg machine unconfirmed."
+  },
+  "legCurl": {
+    "where": "Hamstrings",
+    "parts": [
+      "hamstrings"
+    ],
+    "cue": "Keep hips on pad; curl lower legs against the ankle roller.",
+    "labels": [
+      "Legs extended",
+      "Curl at knees"
+    ],
+    "name": "Lying bench leg curl",
+    "uncertain": "Prone bench variant shown; confirm your machine."
+  },
+  "legExt": {
+    "where": "Quads",
+    "parts": [
+      "quads"
+    ],
+    "cue": "Align knee with pivot; straighten knees without kicking.",
+    "labels": [
+      "Knees bent",
+      "Extend legs"
+    ],
+    "name": "Seated leg extension"
+  },
+  "legPress": {
+    "where": "Quads · glutes",
+    "parts": [
+      "quads",
+      "glutes"
+    ],
+    "cue": "Keep back and hips on seat; press without locking knees.",
+    "labels": [
+      "Knees bent",
+      "Press platform"
+    ],
+    "name": "Horizontal leg press"
+  },
+  "backExt": {
+    "where": "Spinal erectors · glutes",
+    "parts": [
+      "lowerback",
+      "glutes"
+    ],
+    "cue": "Hinge at hips; stop with torso and legs aligned. No hyperextension.",
+    "labels": [
+      "Hinge forward",
+      "Return to neutral"
+    ],
+    "name": "45-degree back extension",
+    "uncertain": "Angled bench illustration; use your actual pad and foot placement."
+  },
+  "situps": {
+    "where": "Abs",
+    "parts": [
+      "abs"
+    ],
+    "cue": "Curl shoulder blades off the floor; avoid pulling on your neck.",
+    "labels": [
+      "Shoulders down",
+      "Partial curl"
+    ],
+    "name": "Partial sit-up / crunch"
+  },
+  "kneeRaise": {
+    "where": "Abs · hip flexors",
+    "parts": [
+      "abs",
+      "hipflexors"
+    ],
+    "cue": "Raise bent knees with control; avoid swinging.",
+    "labels": [
+      "Legs down",
+      "Knees raised"
+    ],
+    "name": "Supported knee raise",
+    "uncertain": "Captain’s-chair version shown; confirm your support."
+  }
 };
-const line=(d,clr='#28485d',width=6)=>`<path d="${d}" fill="none" stroke="${clr}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
-const circle=(x,y,r,clr='#28485d')=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${clr}"/>`;
-const barb=(x1,y1,x2,y2)=>line(`M${x1} ${y1} L${x2} ${y2}`,'#188c80',5)+circle(x1,y1,4,'#188c80')+circle(x2,y2,4,'#188c80');
-function stand(arms,legs='M75 78 L65 111 M87 78 L97 111'){
- return circle(81,24,10)+line('M81 38 L81 77 M69 77 L93 77')+line(legs)+line(arms);
-}
-function motionSvg(id){let a='';const machine='#a4b9c5';switch(id){
- case 'bench':a=line('M27 85 L143 85 M38 85 L36 111 M130 85 L130 111',machine,5)+circle(54,72,9)+line('M64 73 L115 73 L127 98 L141 99 M74 73 L61 94 L52 103')+line('M76 72 L77 49 L98 49 L101 72')+barb(50,42,127,42);break;
- case 'incline':a=line('M50 92 L118 42 M50 92 L49 111 M118 42 L127 111',machine,5)+circle(106,38,9)+line('M102 49 L75 83 L62 102 L51 106 M83 75 L95 102 L109 106')+line('M96 56 L111 45 L111 23 M91 61 L99 46 L99 23')+barb(96,20,115,20);break;
- case 'fly':a=line('M26 46 L26 94 M144 46 L144 94 M24 46 L39 46 M131 46 L146 46 M56 93 L113 93',machine,5)+stand('M81 48 L55 44 L45 55 M81 48 L107 44 L117 55')+barb(40,58,49,53)+barb(112,53,121,58);break;
- case 'row':a=line('M35 86 L112 86 M50 86 L47 111 M115 39 L115 108 M115 39 L142 39',machine,5)+circle(65,35,10)+line('M64 48 L68 78 L57 103 M68 77 L92 81 L107 106 M68 54 L95 56 L113 55 M75 54 L100 66 L115 58')+barb(115,51,115,65);break;
- case 'lat':a=line('M26 19 L145 19 M28 19 L28 112 M144 19 L144 112 M51 88 L112 88',machine,5)+stand('M77 45 L58 43 L47 24 M85 45 L104 43 L115 24','M76 78 L72 104 M88 78 L92 104')+line('M69 11 L100 11', '#188c80',5)+line('M47 24 L68 11 M115 24 L100 11','#188c80',4);break;
- case 'lateral':a=stand('M80 46 L52 48 L30 52 M82 46 L110 48 L133 52')+barb(23,48,32,48)+barb(132,48,141,48);break;
- case 'shoulder':a=stand('M79 45 L59 48 L59 26 M83 45 L103 48 L103 26')+barb(50,20,68,20)+barb(94,20,112,20);break;
- case 'front':a=circle(78,25,10)+line('M78 39 L78 78 M68 78 L88 78 M71 79 L64 110 M84 79 L93 110')+line('M76 47 L92 47 L117 49 M83 47 L102 54 L125 56')+barb(112,48,124,48)+barb(121,56,133,56);break;
- case 'triExt':a=line('M128 16 L128 113 M122 16 L140 16 M128 16 L128 46',machine,5)+stand('M77 47 L88 54 L98 71 M84 47 L94 51 L104 71')+barb(91,70,110,70);break;
- case 'french':a=line('M26 90 L145 90 M39 90 L37 111 M132 90 L130 111',machine,5)+circle(52,76,9)+line('M61 78 L113 78 L128 100 M104 78 L87 101')+line('M70 76 L83 49 L83 24 M80 77 L98 49 L98 24')+barb(75,22,108,22);break;
- case 'curls':a=stand('M80 46 L61 54 L50 67 L62 77 M83 46 L102 54 L112 67 L100 77')+barb(55,74,70,79)+barb(94,79,109,74);break;
- case 'hammer':a=stand('M80 46 L61 54 L53 67 L61 81 M83 46 L102 54 L110 67 L102 81')+barb(59,70,59,87)+barb(103,70,103,87);break;
- case 'splitSquat':a=line('M28 109 L141 109',machine,3)+circle(84,22,10)+line('M84 36 L81 69 M81 69 L46 76 L35 105 M81 69 L113 82 L125 104 M83 45 L71 68 M87 45 L98 68')+barb(64,66,64,85)+barb(103,66,103,85);break;
- case 'legCurl':a=line('M33 70 L126 70 M39 70 L34 107 M122 70 L127 107',machine,5)+circle(47,52,9)+line('M57 54 L112 54 L124 60 L112 36 M62 56 L69 73')+line('M119 43 L134 43', '#188c80',6);break;
- case 'legExt':a=line('M55 66 L113 66 L113 103 M55 66 L50 102',machine,5)+circle(70,28,10)+line('M73 40 L80 65 L105 64 L130 74 M80 65 L72 90 M80 45 L93 60')+line('M122 75 L141 75','#188c80',6);break;
- case 'legPress':a=line('M27 26 L27 108 M28 40 L42 40 M42 40 L116 94 M116 94 L141 94',machine,5)+circle(115,45,10)+line('M107 54 L86 74 L63 78 L45 66 M85 74 L108 102 M111 63 L123 83')+line('M24 45 L24 86','#188c80',7);break;
- case 'backExt':a=line('M64 65 L112 65 M72 65 L67 108 M102 65 L108 108',machine,5)+circle(127,44,10)+line('M116 49 L88 63 L58 82 L37 103 M88 63 L113 92 M111 62 L96 73')+circle(34,106,6,'#188c80');break;
- case 'situps':a=line('M25 98 L145 98',machine,3)+circle(62,50,9)+line('M68 60 L89 86 L115 88 L133 97 M85 85 L74 103 M78 68 L101 71')+line('M92 60 Q104 44 121 53','#188c80',3);break;
- case 'kneeRaise':a=line('M48 20 L114 20 M49 20 L49 69 M114 20 L114 69',machine,5)+circle(81,27,9)+line('M81 40 L81 78 M81 76 L64 86 L73 101 M81 76 L96 86 L90 101 M80 46 L57 55 M83 46 L106 55')+line('M60 105 L91 105','#188c80',3);break;
- default:a=stand('M81 46 L60 71 M82 46 L102 71');
+function exerciseScene(id,phase){
+ const ink='#263f51',shirt='#47677a',pants='#354e62',skin='#e3ac84',skinEdge='#956748',metal='#a6b6c2',padColor='#657b8b',accent='#148477',floor='#d8e3e8';
+ const path=(d,c=metal,w=3,fill='none',extra='')=>`<path d="${d}" fill="${fill}" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" ${extra}/>`;
+ const rect=(x,y,w,hh,fill=metal,rx=2)=>`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${rx}" fill="${fill}"/>`;
+ const dot=(x,y,r,fill=accent,stroke='none',w=0)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${w}"/>`;
+ const rod=(a,b,c=metal,w=4)=>path(`M${a[0]} ${a[1]}L${b[0]} ${b[1]}`,c,w);
+ const chain=(points,c,w)=>path('M'+points.map(p=>p.join(' ')).join(' L'),c,w);
+ const pad=(a,b,w=8)=>rod(a,b,padColor,w);
+ const pivot=(x,y)=>dot(x,y,4, '#f8fbfc',padColor,2);
+ const cable=(a,b)=>rod(a,b,'#728998',1.5);
+ const frame=(pts)=>chain(pts,metal,4);
+ const platform=(a,b)=>rod(a,b,padColor,9)+rod(a,b,'#9eb0bd',2);
+ const stack=(x,y,w=14,h=45)=>rect(x,y,w,h,'#d0dce3',3)+Array.from({length:6},(_,i)=>rod([x+2,y+5+i*(h-10)/5],[x+w-2,y+5+i*(h-10)/5],padColor,1.5)).join('');
+ const dumbbell=(x,y,angle=0)=>`<g transform="translate(${x} ${y}) rotate(${angle})">${rect(-7,-2,14,4,ink,1)}${rect(-11,-6,6,12,accent,2)}${rect(5,-6,6,12,accent,2)}</g>`;
+ const bar=(x,y)=>rod([x-23,y],[x+23,y],ink,2.5)+rect(x-22,y-9,7,18,accent,2)+rect(x+15,y-9,7,18,accent,2);
+ const barSide=(x,y)=>dot(x,y,9,accent,ink,1.2)+dot(x,y,2,'#f7fbfb');
+ const roller=(x,y)=>rect(x-6,y-4,12,8,accent,3);
+ const arrow=(d,x,y,angle)=>path(d,accent,2.2)+`<path d="M-5 -3 L0 0 L-5 3" transform="translate(${x} ${y}) rotate(${angle})" fill="none" stroke="${accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+ const limb=(a,b,c,leg=false,far=false)=>{const edge=far?'#a6b4bd':ink,upper=far?'#8b9ca8':leg?pants:shirt,lower=leg?(far?'#c1aa99':skin):(far?'#c1aa99':skin);return rod(a,b,edge,leg?10:8)+rod(a,b,upper,leg?8:6)+rod(b,c,edge,leg?8:6)+rod(b,c,lower,leg?6:4.5)+dot(b[0],b[1],leg?3.3:2.6,upper);};
+ const shoe=(p,dx=9,dy=1,far=false)=>rod(p,[p[0]+dx,p[1]+dy],far?'#9aabb5':ink,6)+rod([p[0],p[1]+3],[p[0]+dx,p[1]+dy+3],far?'#d5dfe4':'#738795',2);
+ const torso=(s,hip,w=11)=>{const dx=hip[0]-s[0],dy=hip[1]-s[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,p=(a,k)=>[a[0]+nx*k,a[1]+ny*k].map(v=>Math.round(v*10)/10).join(' ');return path(`M${p(s,w)} Q${p([s[0]+dx*.5,s[1]+dy*.5],w*.82)} ${p(hip,w*.72)} L${p(hip,-w*.72)} Q${p([s[0]+dx*.5,s[1]+dy*.5],-w*.82)} ${p(s,-w)} Z`,ink,1.2,shirt)+rod([hip[0]-nx*6,hip[1]-ny*6],[hip[0]+nx*6,hip[1]+ny*6],pants,9);};
+ const head=(x,y,s)=>rod([x,y+4],s,skin,5)+dot(x,y,9,skin,skinEdge,1)+path(`M${x-7} ${y-4} Q${x-4} ${y-12} ${x+5} ${y-7} L${x+8} ${y-4}`,ink,2);
+ const side=(p)=>{const {s,hip,h,arms=[],legs=[],face=1}=p;let out='';if(legs.length>1){const z=legs[1];out+=limb(hip,z[0],z[1],true,true)+shoe(z[1],z[2]??face*9,z[3]??0,true)}if(arms.length>1)out+=limb(s,arms[1][0],arms[1][1],false,true);out+=torso(s,hip)+head(h[0],h[1],s);if(legs.length){const z=legs[0];out+=limb(hip,z[0],z[1],true)+shoe(z[1],z[2]??face*9,z[3]??0)}if(arms.length){const z=arms[0];out+=limb(s,z[0],z[1])+dot(z[1][0],z[1][1],3,skin,skinEdge,.7)}return out;};
+ const front=(p)=>{const {x=90,y=22,shoulder=43,hip=81,arms,legs,back=false}=p;const l=[x-12,shoulder],r=[x+12,shoulder];const pl=[x-6,hip],pr=[x+6,hip];let z=limb(pl,legs[0][0],legs[0][1],true)+shoe(legs[0][1],-5,0)+limb(pr,legs[1][0],legs[1][1],true)+shoe(legs[1][1],5,0);z+=path(`M${x-13} ${shoulder-1} Q${x} ${shoulder-6} ${x+13} ${shoulder-1} L${x+9} ${hip-2} Q${x} ${hip+5} ${x-9} ${hip-2}Z`,ink,1.2,shirt)+rect(x-10,hip-6,20,12,pants,4)+head(x,y,[x,shoulder-4]);z+=limb(l,arms[0][0],arms[0][1])+limb(r,arms[1][0],arms[1][1]);z+=dot(...arms[0][1],3,skin,skinEdge,.7)+dot(...arms[1][1],3,skin,skinEdge,.7);return z;};
+ let m='',body='',fg='',motion='';
+ const standingLegs=[[[76,99],[73,117]],[[104,99],[107,117]]];
+ const seatedLegs=[[[73,89],[73,116]],[[107,89],[107,116]]];
+ const bench=(a,b)=>pad(a,b,8)+frame([[a[0]+9,a[1]+4],[a[0]+9,118],[a[0]-2,118]])+frame([[b[0]-8,b[1]+4],[b[0]-8,118],[b[0]+4,118]]);
+ switch(id){
+ case 'bench':{
+  const elbow=phase?[76,39]:[69,72],hand=phase?[76,16]:[89,53];
+  m=bench([32,84],[127,84])+frame([[38,118],[38,19],[60,19]])+frame([[151,118],[151,19],[128,19]]);
+  body=side({h:[46,72],s:[63,73],hip:[111,74],arms:[[elbow,hand],[[elbow[0]+5,elbow[1]+4],[hand[0]+4,hand[1]+2]]],legs:[[[133,85],[131,115],11,0],[[120,88],[111,115],10,0]]});
+  fg=barSide(...hand);motion=phase?arrow('M104 50 L104 22',104,22,-90):'';break;}
+ case 'incline':{
+  const a=phase?[[100,49],[104,20]]:[[99,75],[120,58]],b=phase?[[89,48],[91,18]]:[[87,72],[105,54]];
+  m=pad([69,44],[104,84],9)+pad([104,84],[132,84],9)+frame([[73,47],[65,118],[142,118],[125,88]])+frame([[105,88],[105,118]]);
+  body=side({h:[65,30],s:[78,49],hip:[105,82],arms:[a,b],legs:[[[132,87],[131,115],11,0],[[120,91],[115,115],8,0]]});
+  fg=dumbbell(...b[1])+dumbbell(...a[1]);motion=phase?arrow('M132 57 L132 24',132,24,-90):'';break;}
+ case 'fly':{
+  const hands=phase?[[83,57],[97,57]]:[[34,52],[146,52]], elbows=phase?[[66,62],[114,62]]:[[55,43],[125,43]];
+  m=frame([[17,118],[17,25],[163,25],[163,118]])+pad([90,38],[90,79],28)+pad([73,85],[107,85],9)+frame([[90,90],[90,118]])+pivot(24,37)+pivot(156,37)+rod([24,37],hands[0],metal,3)+rod([156,37],hands[1],metal,3);
+  body=front({arms:[[elbows[0],hands[0]],[elbows[1],hands[1]]],legs:seatedLegs,hip:78});
+  fg=rod([hands[0][0],hands[0][1]-6],[hands[0][0],hands[0][1]+6],accent,5)+rod([hands[1][0],hands[1][1]-6],[hands[1][0],hands[1][1]+6],accent,5);motion=phase?arrow('M39 73 Q60 85 78 67',78,67,-35)+arrow('M141 73 Q120 85 102 67',102,67,215):'';break;}
+ case 'row':{
+  const hand=phase?[84,58]:[127,49],elbow=phase?[52,65]:[100,52];
+  m=frame([[34,118],[34,87],[72,87],[72,118],[157,118],[157,17],[126,17]])+pad([47,84],[74,84],8)+pad([83,42],[83,65],10)+frame([[83,67],[108,87],[157,87]])+stack(145,61,13,47)+pivot(132,31)+rod([132,31],hand,metal,4);
+  body=side({h:[65,24],s:[72,43],hip:[62,77],arms:[[elbow,hand]],legs:[[[97,80],[108,113],9,0],[[88,87],[91,114],8,0]]});
+  fg=rod([hand[0],hand[1]-6],[hand[0],hand[1]+5],accent,5);motion=phase?arrow('M124 70 L87 70',87,70,180):'';break;}
+ case 'lat':{
+  const hands=phase?[[74,50],[106,50]]:[[74,13],[106,13]],elbows=phase?[[59,69],[121,69]]:[[65,27],[115,27]];
+  m=frame([[23,118],[23,9],[157,9],[157,118]])+stack(140,62,14,48)+cable([90,9],[90,hands[0][1]-5])+pad([67,86],[113,86],8)+frame([[90,91],[90,119]]);
+  body=front({y:33,shoulder:51,hip:83,arms:[[elbows[0],hands[0]],[elbows[1],hands[1]]],legs:seatedLegs});
+  fg=path(`M74 ${hands[0][1]+5}V${hands[0][1]-5}H106V${hands[1][1]+5}`,accent,4)+pad([69,88],[111,88],8);motion=phase?arrow('M133 20 L133 55',133,55,90):'';break;}
+ case 'lateral':case 'shoulder':case 'curls':case 'hammer':{
+  let arms,weights;
+  if(id==='lateral'){arms=phase?[[[49,46],[25,50]],[[131,46],[155,50]]]:[[[71,65],[65,88]],[[109,65],[115,88]]];weights=arms.map(a=>[...a[1],phase?0:90]);motion=phase?arrow('M47 84 Q28 79 26 60',26,60,-90)+arrow('M133 84 Q152 79 154 60',154,60,-90):'';}
+  else if(id==='shoulder'){m=pad([90,37],[90,78],30)+pad([74,85],[106,85],9)+frame([[90,90],[90,118],[34,118],[34,38],[50,38]])+frame([[90,118],[146,118],[146,38],[130,38]]);arms=phase?[[[69,29],[72,8]],[[111,29],[108,8]]]:[[[61,58],[61,38]],[[119,58],[119,38]]];weights=arms.map(a=>[...a[1],0]);for(const a of arms)m+=rod([a[1][0]<90?34:146,38],a[1],metal,4);motion=phase?arrow('M40 42 L40 12',40,12,-90)+arrow('M140 42 L140 12',140,12,-90):'';}
+  else{arms=phase?[[[68,67],[74,48]],[[112,67],[106,48]]]:[[[69,65],[64,88]],[[111,65],[116,88]]];weights=arms.map(a=>[...a[1],id==='hammer'?90:0]);motion=phase?arrow('M48 85 Q37 60 56 48',56,48,-30)+arrow('M132 85 Q143 60 124 48',124,48,210):'';}
+  body=front({arms,legs:id==='shoulder'?seatedLegs:standingLegs,hip:id==='shoulder'?77:81});
+  fg=weights.map(p=>id==='shoulder'?rod([p[0]-6,p[1]],[p[0]+6,p[1]],accent,5):dumbbell(...p)).join('');break;}
+ case 'front':case 'triExt':{
+  let elbow,hand;if(id==='front'){elbow=phase?[106,43]:[79,68];hand=phase?[137,45]:[84,88];motion=phase?arrow('M117 83 Q139 69 139 53',139,53,-90):'';}
+  else{elbow=[76,65];hand=phase?[81,89]:[99,56];m=frame([[148,118],[148,10],[125,10]])+stack(146,56,14,51)+cable([125,10],hand);motion=phase?arrow('M112 53 L112 83',112,83,90):'';}
+  body=side({h:[69,20],s:[71,39],hip:[70,81],arms:[[elbow,hand],[[elbow[0]-5,elbow[1]+2],[hand[0]-5,hand[1]+2]]],legs:[[[75,99],[78,117],11,0],[[63,99],[60,117],10,0]]});
+  fg=id==='front'?dumbbell(...hand,phase?0:90):rod([hand[0]-8,hand[1]],[hand[0]+8,hand[1]],accent,5);break;}
+ case 'french':{
+  const elbow=[67,43],hand=phase?[68,14]:[38,42];
+  m=bench([30,83],[130,83]);
+  body=side({h:[46,71],s:[63,72],hip:[111,73],arms:[[elbow,hand],[[elbow[0]+4,elbow[1]+2],[hand[0]+4,hand[1]+2]]],legs:[[[132,85],[131,115],10,0],[[121,88],[111,115],10,0]]});fg=barSide(...hand);motion=phase?arrow('M37 35 Q45 12 58 13',58,13,0):'';break;}
+ case 'splitSquat':{
+  const p=phase?{h:[86,38],s:[84,55],hip:[83,84],arms:[[[99,69],[123,53]]],legs:[[[119,85],[125,116],12,0],[[61,102],[38,117],9,0]]}:{h:[84,16],s:[83,34],hip:[83,72],arms:[[[102,49],[123,53]]],legs:[[[108,94],[125,116],12,0],[[64,92],[38,117],9,0]]};
+  m=frame([[148,118],[148,38],[123,38],[123,53]])+rod([121,53],[136,53],accent,4)+platform([116,122],[147,122]);
+  body=side(p);motion=phase?arrow('M54 45 L54 79',54,79,90):'';break;}
+ case 'legCurl':{
+  const knee=[120,68],ankle=phase?[132,38]:[150,70];m=bench([36,76],[117,76])+frame([[118,118],[118,68]])+pivot(120,68)+rod(knee,ankle,metal,4);
+  body=side({h:[39,61],s:[57,64],hip:[94,66],arms:[[[47,82],[34,84]]],legs:[[knee,ankle,phase?8:9,phase?-4:4]],face:-1});
+  fg=roller(ankle[0]-2,ankle[1]-5);motion=phase?arrow('M155 69 Q159 43 141 32',141,32,225):'';break;}
+ case 'legExt':{
+  const knee=[112,81],ankle=phase?[150,81]:[118,115];m=pad([62,34],[68,78],10)+pad([68,83],[113,83],9)+frame([[68,87],[68,118],[145,118]])+pivot(112,81)+rod(knee,ankle,metal,4);
+  body=side({h:[77,24],s:[79,42],hip:[86,79],arms:[[[93,61],[105,75]]],legs:[[knee,ankle,phase?7:12,phase?-5:0]]});fg=roller(ankle[0]-2,ankle[1]-5);motion=phase?arrow('M128 112 Q153 106 154 90',154,90,-90):'';break;}
+ case 'legPress':{
+  const knee=phase?[96,73]:[91,50],ankle=phase?[146,72]:[115,70];m=pad([32,39],[55,87],10)+pad([55,87],[86,87],10)+frame([[35,91],[35,116],[160,116]])+rod([56,105],[160,105],padColor,3)+platform([ankle[0]+7,51],[ankle[0]+7,95])+frame([[ankle[0]+7,95],[ankle[0]+7,105]]);
+  body=side({h:[34,27],s:[43,43],hip:[69,79],arms:[[[56,67],[75,81]]],legs:[[knee,ankle,phase?4:6,-12]]});motion=phase?arrow('M107 36 L148 36',148,36,0):'';break;}
+ case 'backExt':{
+  const hip=[98,64],s=phase?[126,33]:[126,91],hh=phase?[137,18]:[139,104];m=pad([84,62],[103,62],13)+frame([[93,69],[75,119],[142,119]])+rod([44,113],[91,67],metal,4)+platform([30,113],[53,113])+roller(45,103);
+  body=side({h:hh,s,hip,arms:[[[s[0]+4,s[1]+9],[s[0]-7,s[1]+3]]],legs:[[[70,90],[43,113],-9,0]],face:-1});
+  motion=phase?arrow('M157 100 Q170 57 148 26',148,26,-120):'';break;}
+ case 'situps':{
+  const s=phase?[66,84]:[55,104],hh=phase?[51,71]:[38,100];m=rect(21,118,140,3,'#abbec7',1);
+  body=side({h:hh,s,hip:[101,107],arms:[[[s[0]+17,s[1]-9],[s[0]+23,s[1]-1]]],legs:[[[127,79],[145,113],11,0],[[116,83],[130,113],10,0]]});
+  motion=phase?arrow('M29 96 Q29 77 43 70',43,70,-30):'';break;}
+ case 'kneeRaise':{
+  const knee=phase?[118,76]:[82,99],ankle=phase?[119,108]:[82,118];m=frame([[47,118],[47,25],[67,25],[67,118]])+pad([69,36],[69,69],11)+pad([75,59],[115,59],9)+rod([112,58],[112,47],accent,5)+frame([[47,118],[133,118]]);
+  body=side({h:[82,24],s:[83,40],hip:[82,76],arms:[[[81,59],[112,51]]],legs:[[knee,ankle,10,0]]});motion=phase?arrow('M137 110 Q148 86 130 77',130,77,210):'';break;}
+ default:return '';
  }
- return `<svg class="motion-art" viewBox="0 0 170 122" role="img" aria-label="Illustration of ${esc(id)} at mid repetition"><rect x="1" y="1" width="168" height="120" rx="11" fill="#f4f8fa"/>${a}</svg>`;
+ return rod([12,123],[168,123],floor,1.3)+m+body+fg+motion;
 }
-function muscleSvg(id){const spec=ART[id]||{where:'Muscle group',view:'front',parts:[]},back=spec.view==='back',p=new Set(spec.parts),color='#1aa18c';
- const patch=(part,d)=>`<path d="${d}" fill="${p.has(part)?color:'#cfdce4'}" opacity="${p.has(part)?'1':'.5'}" stroke="#f2f7fa" stroke-width="1"/>`;
- const base=`<circle cx="40" cy="10" r="8" fill="#afc1cc"/><path d="M29 22 Q40 19 51 22 L58 51 L50 70 L49 78 L54 112 L43 114 L40 85 L37 114 L26 112 L31 78 L30 68 L22 51 Z" fill="#cbd8e1"/><path d="M29 23 L16 26 L10 54 L20 58 L29 39 M51 23 L64 26 L70 54 L60 58 L51 39" fill="#cbd8e1" stroke="#cbd8e1" stroke-width="7" stroke-linejoin="round"/>`;
- const top=back
- ?patch('back','M29 23 L51 23 L54 49 Q40 63 26 49 Z')+patch('lowerback','M32 50 L48 50 L46 69 L34 69 Z')
- :patch('chest','M26 27 Q39 23 40 34 Q40 43 30 42 L24 36 Z')+patch('chest','M54 27 Q41 23 40 34 Q40 43 50 42 L56 36 Z')+patch('abs','M33 45 L47 45 L48 68 L32 68 Z');
- const arms=patch('shoulders','M25 23 L16 27 L17 37 L27 36 L33 25 Z')+patch('shoulders','M55 23 L64 27 L63 37 L53 36 L47 25 Z')+
- patch((p.has('triceps')?'triceps':'biceps'),'M15 39 L23 40 L20 52 L11 51 Z')+patch((p.has('triceps')?'triceps':'biceps'),'M65 39 L57 40 L60 52 L69 51 Z')+
- patch('forearms','M11 51 L20 52 L18 65 L9 62 Z')+patch('forearms','M69 51 L60 52 L62 65 L71 62 Z');
- const legs=patch(back?'hamstrings':'quads','M31 77 L39 79 L37 96 L29 94 Z')+patch(back?'hamstrings':'quads','M41 79 L49 77 L52 94 L44 96 Z')+patch('glutes','M30 66 L40 66 L39 81 L31 81 Z')+patch('glutes','M40 66 L50 66 L49 81 L41 81 Z');
- return `<svg class="target-art" viewBox="0 0 80 119" role="img" aria-label="Highlighted target muscles: ${esc(spec.where)}">${base}${top}${arms}${legs}</svg>`;
+function motionSvg(id){
+ const spec=ART[id];if(!spec)return '';
+ const panels=[0,1].map(i=>`<g transform="translate(${i*184} 0)"><rect x="1" y="1" width="180" height="130" rx="10" fill="#f7fafb" stroke="#dfe8ed"/>${exerciseScene(id,i)}</g>`).join('');
+ return `<svg class="motion-art" viewBox="0 0 366 132" role="img" aria-label="${esc(spec.name)}: ${esc(spec.labels.join(' to '))}">${panels}</svg><div class="motion-labels"><span>${esc(spec.labels[0])}</span><span>${esc(spec.labels[1])}</span></div>`;
 }
-function visualPanel(ex){const spec=ART[ex.id]||{where:ex.muscle,parts:[],view:'front',cue:'Follow the setup for your own machine.'};return `<div class="exercise-visual"><div class="motion-panel">${motionSvg(ex.id)}<div class="motion-copy"><div class="visual-eyebrow">Mid-rep position</div><div class="motion-cue">${esc(spec.cue)}</div>${spec.uncertain?'<span class="visual-flag">Confirm machine / grip</span>':''}</div></div><div class="target-panel">${muscleSvg(ex.id)}<div class="target-name">${esc(spec.where)}</div></div></div>`;}
+function muscleSvg(id){
+ const spec=ART[id];if(!spec)return '';
+ const p=new Set(spec.parts),active='#168b7b',muted='#c5d3db',body='#dfe7eb';
+ const frontParts=['chest','upperchest','shoulders','biceps','forearms','abs','hipflexors','quads'];
+ const backParts=['back','lats','lowerback','triceps','glutes','hamstrings'];
+ const views=[frontParts.some(k=>p.has(k))?'front':null,backParts.some(k=>p.has(k))?'back':null].filter(Boolean);
+ const figure=(view)=>{const back=view==='back',patch=(part,d)=>`<path d="${d}" fill="${p.has(part)?active:muted}" stroke="#f3f7f8" stroke-width=".7"/>`;
+ const base=`<circle cx="32" cy="9" r="6.5" fill="#a4b6c1"/><path d="M25 17 Q32 14 39 17 L44 42 39 55 41 66 44 88 37 91 32 66 27 91 20 88 23 66 25 55 20 42Z" fill="${body}" stroke="#bac9d2" stroke-width=".7"/><path d="M24 19 L15 23 10 47 9 60 16 62 20 43 26 30 M40 19 L49 23 54 47 55 60 48 62 44 43 38 30" fill="${body}" stroke="#bac9d2" stroke-width=".7"/>`;
+ const sides=back?patch('back','M24 19L40 19 43 35 32 45 21 35Z')+patch('lats','M22 30L30 35 30 48 25 44Z')+patch('lats','M42 30L34 35 34 48 39 44Z')+patch('lowerback','M28 38L36 38 38 53 26 53Z')+patch('glutes','M24 53L31 53 31 65 23 63Z')+patch('glutes','M33 53L40 53 41 63 33 65Z'):patch('chest','M23 22Q29 19 31 24L31 34 22 31Z')+patch('chest','M41 22Q35 19 33 24L33 34 42 31Z')+patch('upperchest','M23 21L31 20 31 25 23 26Z')+patch('upperchest','M41 21L33 20 33 25 41 26Z')+patch('abs','M28 35L36 35 37 53 27 53Z')+patch('hipflexors','M24 50L31 54 29 62 24 58Z')+patch('hipflexors','M40 50L33 54 35 62 40 58Z');
+ const arms=patch('shoulders','M24 19L15 23 16 30 23 30Z')+patch('shoulders','M40 19L49 23 48 30 41 30Z')+patch(back?'triceps':'biceps','M15 30L22 32 18 44 12 43Z')+patch(back?'triceps':'biceps','M49 30L42 32 46 44 52 43Z')+patch('forearms','M12 45L18 46 15 59 9 58Z')+patch('forearms','M52 45L46 46 49 59 55 58Z');
+ const legs=patch(back?'hamstrings':'quads','M24 64L31 65 28 81 21 79Z')+patch(back?'hamstrings':'quads','M40 64L33 65 36 81 43 79Z');
+ return base+sides+arms+legs;
+ };
+ return `<svg class="target-art" viewBox="0 0 ${64*views.length} 94" role="img" aria-label="Target muscles: ${esc(spec.where)}">${views.map((view,i)=>`<g transform="translate(${i*64} 0)">${figure(view)}</g>`).join('')}</svg>`;
+}
+function visualPanel(ex){
+ const spec=ART[ex.id];if(!spec)return `<div class="exercise-visual custom-visual"><div class="target-name">${esc(ex.muscle)}</div></div>`;
+ return `<div class="exercise-visual"><div class="motion-panel"><div class="motion-frames">${motionSvg(ex.id)}</div><div class="motion-copy"><div class="motion-cue">${esc(spec.cue)}</div>${spec.uncertain?`<details class="visual-uncertain"><summary>Machine setup varies</summary><div>${esc(spec.uncertain)}</div></details>`:''}</div></div><div class="target-panel">${muscleSvg(ex.id)}<div class="target-name">${esc(spec.where)}</div></div></div>`;
+}
 
 const DEFAULT = {schema:1,custom:[],overrides:{},history:[],drafts:{},nextUp:{},nextLoads:{},exerciseOrder:{},prefs:{upperFrontRaise:false,restSeconds:90,exerciseRestSeconds:120,audioMode:"voice"},guided:{active:false,day:'upper',id:null,index:0,restUntil:0,lastAction:null}};
 let state, day='upper', page='workout', storageOK=true, toastTimer;
