@@ -1,4 +1,4 @@
-# chaver b’imun
+# חבר באימון
 
 A lightweight, mobile-first workout tracker for **A / B / C** gym days.
 
